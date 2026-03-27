@@ -13,7 +13,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Fitness Tracker Milestone 2",
+  title: "Fitness Tracker",
   description: "Login/Register, user profile management, and forum comments in Next.js",
 };
 

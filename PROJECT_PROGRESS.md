@@ -52,7 +52,7 @@ Prisma schema created/updated with:
 - ForumComment model
 
 Migration completed:
-- prisma/migrations/20260327164731_milestone2_minimal
+- Initial database schema migration applied
 
 Database location (local):
 - dev.db

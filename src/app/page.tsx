@@ -9,7 +9,7 @@ export default async function Home() {
     <main className="mx-auto flex w-full max-w-3xl flex-1 flex-col justify-center px-6 py-12">
       <h1 className="text-4xl font-semibold">Fitness Tracker</h1>
       <p className="mt-3 max-w-xl text-zinc-600">
-        Milestone 2 minimal implementation with user management, profile management, and a
+        Full-featured fitness tracker with user management, profile management, and a
         community forum.
       </p>
 
