@@ -1,0 +1,59 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Get a free hosted Postgres database in seconds: `npx create-db`
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+}
+
+enum Role {
+  USER
+  ADMIN
+}
+
+model User {
+  id           String         @id @default(cuid())
+  email        String         @unique
+  passwordHash String
+  name         String
+  role         Role           @default(USER)
+  bio          String?
+  goal         String?
+  createdAt    DateTime       @default(now())
+  updatedAt    DateTime       @updatedAt
+  posts        ForumPost[]
+  comments     ForumComment[]
+}
+
+model ForumPost {
+  id        String         @id @default(cuid())
+  title     String
+  content   String
+  createdAt DateTime       @default(now())
+  updatedAt DateTime       @updatedAt
+  authorId  String
+  author    User           @relation(fields: [authorId], references: [id], onDelete: Cascade)
+  comments  ForumComment[]
+
+  @@index([authorId])
+  @@index([createdAt])
+}
+
+model ForumComment {
+  id        String    @id @default(cuid())
+  content   String
+  createdAt DateTime  @default(now())
+  postId    String
+  authorId  String
+  post      ForumPost @relation(fields: [postId], references: [id], onDelete: Cascade)
+  author    User      @relation(fields: [authorId], references: [id], onDelete: Cascade)
+
+  @@index([postId])
+  @@index([authorId])
+  @@index([createdAt])
+}
