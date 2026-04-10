@@ -1,0 +1,210 @@
+---
+config:
+  layout: elk
+  theme: default
+  look: neo
+---
+erDiagram
+	direction TB
+	USER {
+		string user_id PK ""  
+		string name  ""  
+		string email  ""  
+		string password_hash  ""  
+		string role  ""  
+		datetime created_at  ""  
+	}
+
+	PROFILE {
+		string profile_id PK ""  
+		string user_id FK ""  
+		int age  ""  
+		float height_cm  ""  
+		string gender  ""  
+		string fitness_level  ""  
+		string bio  ""  
+	}
+
+	GOAL {
+		string goal_id PK ""  
+		string user_id FK ""  
+		string goal_type  ""  
+		float target_value  ""  
+		float current_value  ""  
+		date end_date  ""  
+		string status  ""  
+	}
+
+	REMINDER {
+		string reminder_id PK ""  
+		string user_id FK ""  
+		string title  ""  
+		datetime remind_at  ""  
+		boolean is_done  ""  
+	}
+
+	CALORIE_LOG {
+		string calorie_log_id PK ""  
+		string user_id FK ""  
+		date log_date  ""  
+		int consumed_kcal  ""  
+		int burned_kcal  ""  
+		int net_kcal  ""  
+	}
+
+	WEIGHT_LOG {
+		string weight_log_id PK ""  
+		string user_id FK ""  
+		date log_date  ""  
+		float weight_kg  ""  
+	}
+
+	WORKOUT {
+		string workout_id PK ""  
+		string user_id FK ""  
+		date workout_date  ""  
+		string notes  ""  
+		int total_minutes  ""  
+	}
+
+	FORUM_POST {
+		string post_id PK ""  
+		string user_id FK ""  
+		string title  ""  
+		string content  ""  
+		datetime created_at  ""  
+	}
+
+	FORUM_COMMENT {
+		string comment_id PK ""  
+		string post_id FK ""  
+		string user_id FK ""  
+		string content  ""  
+		datetime created_at  ""  
+	}
+
+	ORDER {
+		string order_id PK ""  
+		string user_id FK ""  
+		datetime order_date  ""  
+		float total_amount  ""  
+		string status  ""  
+	}
+
+	TRAINER_REQUEST {
+		string request_id PK ""  
+		string user_id FK ""  
+		string trainer_id FK ""  
+		datetime request_date  ""  
+		string status  ""  
+	}
+
+	PLAYLIST {
+		string playlist_id PK ""  
+		string user_id FK ""  
+		string title  ""  
+		string goal_type  ""  
+	}
+
+	USER_WORKOUT_VIDEO {
+		string upload_id PK ""  
+		string user_id FK ""  
+		string exercise_id FK ""  
+		string trainer_id FK ""  
+		string video_url  ""  
+		string feedback  ""  
+		string status  ""  
+		datetime uploaded_at  ""  
+	}
+
+	ANALYTICS_SNAPSHOT {
+		string analytics_id PK ""  
+		string user_id FK ""  
+		date snapshot_date  ""  
+		float bmi  ""  
+		float weekly_progress_pct  ""  
+		string recommendation  ""  
+	}
+
+	WORKOUT_EXERCISE {
+		string id PK ""  
+		string workout_id FK ""  
+		string exercise_id FK ""  
+		int sets  ""  
+		int reps  ""  
+		float weight_kg  ""  
+		int duration_min  ""  
+	}
+
+	EXERCISE {
+		string exercise_id PK ""  
+		string name  ""  
+		string muscle_group  ""  
+		string instructions  ""  
+		string benefits  ""  
+		string expected_gains  ""  
+		string cautions  ""  
+	}
+
+	EXERCISE_VIDEO {
+		string video_id PK ""  
+		string exercise_id FK ""  
+		string title  ""  
+		string video_url  ""  
+	}
+
+	TRAINER {
+		string trainer_id PK ""  
+		string name  ""  
+		string specialization  ""  
+		int experience_years  ""  
+		float rating  ""  
+	}
+
+	PLAYLIST_EXERCISE {
+		string id PK ""  
+		string playlist_id FK ""  
+		string exercise_id FK ""  
+		int order_no  ""  
+	}
+
+	STORE_ITEM {
+		string item_id PK ""  
+		string name  ""  
+		string category  ""  
+		float price  ""  
+		int stock_qty  ""  
+	}
+
+	ORDER_ITEM {
+		string id PK ""  
+		string order_id FK ""  
+		string item_id FK ""  
+		int quantity  ""  
+		float unit_price  ""  
+	}
+
+	USER||--||PROFILE:"has"
+	USER||--o{GOAL:"sets"
+	USER||--o{REMINDER:"receives"
+	USER||--o{CALORIE_LOG:"tracks"
+	USER||--o{WEIGHT_LOG:"tracks"
+	USER||--o{WORKOUT:"logs"
+	USER||--o{FORUM_POST:"creates"
+	USER||--o{FORUM_COMMENT:"writes"
+	USER||--o{ORDER:"places"
+	USER||--o{TRAINER_REQUEST:"sends"
+	USER||--o{PLAYLIST:"creates"
+	USER||--o{USER_WORKOUT_VIDEO:"uploads"
+	USER||--o{ANALYTICS_SNAPSHOT:"has"
+	WORKOUT||--o{WORKOUT_EXERCISE:"contains"
+	EXERCISE||--o{WORKOUT_EXERCISE:"used_in"
+	EXERCISE||--o{EXERCISE_VIDEO:"has"
+	EXERCISE||--o{USER_WORKOUT_VIDEO:"about"
+	TRAINER||--o{USER_WORKOUT_VIDEO:"reviews"
+	PLAYLIST||--o{PLAYLIST_EXERCISE:"includes"
+	EXERCISE||--o{PLAYLIST_EXERCISE:"added_to"
+	STORE_ITEM||--o{ORDER_ITEM:"included_in"
+	ORDER||--o{ORDER_ITEM:"has"
+	FORUM_POST||--o{FORUM_COMMENT:"has"
+	TRAINER||--o{TRAINER_REQUEST:"receives"
