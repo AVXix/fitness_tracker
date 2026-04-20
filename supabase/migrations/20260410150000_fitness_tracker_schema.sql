@@ -43,7 +43,6 @@ create table if not exists public.weight_logs (
   user_id uuid not null references auth.users(id) on delete cascade,
   logged_on date not null default current_date,
   weight_kg numeric(6,2) not null,
-  note text,
   created_at timestamptz not null default timezone('utc', now()),
   constraint weight_logs_weight_positive check (weight_kg > 0)
 );

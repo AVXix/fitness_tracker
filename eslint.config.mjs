@@ -12,6 +12,9 @@ const eslintConfig = defineConfig([
     "out/**",
     "build/**",
     "next-env.d.ts",
+    // Archived / historical projects kept for reference only.
+    "prev_fitnessTracker/**",
+    "er and wireframe/**",
   ]),
 ]);
 

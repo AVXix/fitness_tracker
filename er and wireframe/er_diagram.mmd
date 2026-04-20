@@ -1,0 +1,234 @@
+---
+config:
+  layout: elk
+  theme: default
+  look: neo
+---
+erDiagram
+	direction TB
+	USER {
+		uuid user_id PK "Supabase auth.users.id"
+		string email "managed by Supabase Auth"
+		string role "optional app role"
+		datetime created_at ""
+	}
+
+	PROFILE {
+		uuid user_id PK, FK ""
+		string display_name ""
+		int age ""
+		float height_cm ""
+		string gender ""
+		string fitness_level ""
+		string primary_goal ""
+		string bio ""
+		datetime created_at ""
+		datetime updated_at ""
+	}
+
+	GOAL {
+		uuid goal_id PK ""
+		uuid user_id FK ""
+		string title ""
+		string goal_type ""
+		float target_value ""
+		float current_value ""
+		string target_unit ""
+		date end_date ""
+		string status ""
+		datetime created_at ""
+		datetime updated_at ""
+	}
+
+	REMINDER {
+		uuid reminder_id PK ""
+		uuid user_id FK ""
+		string title ""
+		datetime remind_at ""
+		boolean is_done ""
+		datetime created_at ""
+	}
+
+	CALORIE_LOG {
+		uuid calorie_log_id PK ""
+		uuid user_id FK ""
+		date log_date ""
+		int consumed_kcal ""
+		int burned_kcal ""
+		int net_kcal "derived/generated"
+		datetime created_at ""
+	}
+
+	WEIGHT_LOG {
+		uuid weight_log_id PK ""
+		uuid user_id FK ""
+		date log_date ""
+		float weight_kg ""
+		string note ""
+		datetime created_at ""
+	}
+
+	WORKOUT {
+		uuid workout_id PK ""
+		uuid user_id FK ""
+		string name ""
+		date workout_date ""
+		string notes ""
+		int total_minutes ""
+		int calories_burned ""
+		datetime created_at ""
+		datetime updated_at ""
+	}
+
+	FORUM_POST {
+		uuid post_id PK ""
+		uuid user_id FK ""
+		string title ""
+		string content ""
+		datetime created_at ""
+		datetime updated_at ""
+	}
+
+	FORUM_COMMENT {
+		uuid comment_id PK ""
+		uuid post_id FK ""
+		uuid user_id FK ""
+		string content ""
+		datetime created_at ""
+	}
+
+	ORDER {
+		uuid order_id PK ""
+		uuid user_id FK ""
+		datetime order_date ""
+		float total_amount ""
+		string status ""
+		datetime created_at ""
+	}
+
+	TRAINER_REQUEST {
+		uuid request_id PK ""
+		uuid user_id FK ""
+		uuid trainer_id FK ""
+		datetime request_date ""
+		string status ""
+	}
+
+	PLAYLIST {
+		uuid playlist_id PK ""
+		uuid user_id FK ""
+		string title ""
+		string goal_type ""
+		datetime created_at ""
+	}
+
+	USER_WORKOUT_VIDEO {
+		uuid upload_id PK ""
+		uuid user_id FK ""
+		uuid exercise_id FK ""
+		uuid trainer_id FK ""
+		string video_url ""
+		string feedback ""
+		string status ""
+		datetime uploaded_at ""
+	}
+
+	ANALYTICS_SNAPSHOT {
+		uuid analytics_id PK ""
+		uuid user_id FK ""
+		date snapshot_date ""
+		float bmi ""
+		float weekly_progress_pct ""
+		string recommendation ""
+		datetime created_at ""
+	}
+
+	WORKOUT_EXERCISE {
+		uuid id PK ""
+		uuid workout_id FK ""
+		uuid exercise_id FK ""
+		int sets ""
+		int reps ""
+		float weight_kg ""
+		int duration_min ""
+		datetime created_at ""
+	}
+
+	EXERCISE {
+		uuid exercise_id PK ""
+		string name ""
+		string muscle_group ""
+		string instructions ""
+		string benefits ""
+		string expected_gains ""
+		string cautions ""
+		datetime created_at ""
+	}
+
+	EXERCISE_VIDEO {
+		uuid video_id PK ""
+		uuid exercise_id FK ""
+		string title ""
+		string video_url ""
+		datetime created_at ""
+	}
+
+	TRAINER {
+		uuid trainer_id PK ""
+		string name ""
+		string specialization ""
+		int experience_years ""
+		float rating ""
+		datetime created_at ""
+	}
+
+	PLAYLIST_EXERCISE {
+		uuid id PK ""
+		uuid playlist_id FK ""
+		uuid exercise_id FK ""
+		int order_no ""
+		datetime created_at ""
+	}
+
+	STORE_ITEM {
+		uuid item_id PK ""
+		string name ""
+		string category ""
+		float price ""
+		int stock_qty ""
+		datetime created_at ""
+	}
+
+	ORDER_ITEM {
+		uuid id PK ""
+		uuid order_id FK ""
+		uuid item_id FK ""
+		int quantity ""
+		float unit_price ""
+		datetime created_at ""
+	}
+
+	USER||--||PROFILE:"has"
+	USER||--o{GOAL:"sets"
+	USER||--o{REMINDER:"receives"
+	USER||--o{CALORIE_LOG:"tracks"
+	USER||--o{WEIGHT_LOG:"tracks"
+	USER||--o{WORKOUT:"logs"
+	USER||--o{FORUM_POST:"creates"
+	USER||--o{FORUM_COMMENT:"writes"
+	USER||--o{ORDER:"places"
+	USER||--o{TRAINER_REQUEST:"sends"
+	USER||--o{PLAYLIST:"creates"
+	USER||--o{USER_WORKOUT_VIDEO:"uploads"
+	USER||--o{ANALYTICS_SNAPSHOT:"has"
+	WORKOUT||--o{WORKOUT_EXERCISE:"contains"
+	EXERCISE||--o{WORKOUT_EXERCISE:"used_in"
+	EXERCISE||--o{EXERCISE_VIDEO:"has"
+	EXERCISE||--o{USER_WORKOUT_VIDEO:"about"
+	TRAINER||--o{USER_WORKOUT_VIDEO:"reviews"
+	PLAYLIST||--o{PLAYLIST_EXERCISE:"includes"
+	EXERCISE||--o{PLAYLIST_EXERCISE:"added_to"
+	STORE_ITEM||--o{ORDER_ITEM:"included_in"
+	ORDER||--o{ORDER_ITEM:"has"
+	FORUM_POST||--o{FORUM_COMMENT:"has"
+	TRAINER||--o{TRAINER_REQUEST:"receives"
