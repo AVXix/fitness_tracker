@@ -2,12 +2,14 @@
 
 import { GoalCard } from "./GoalCard";
 import { GoalForm } from "./GoalForm";
-import { getGoalAIAdviceAction } from "@/app/fitness-actions";
 
 interface Goal {
   id: string;
   title: string;
   target_date: string | null;
+  target_value: number | null;
+  current_value: number | null;
+  target_unit: string | null;
   status: string;
   ai_advice: string | null;
   is_completed: boolean;
@@ -18,8 +20,10 @@ interface GoalsPageContentProps {
 }
 
 export function GoalsPageContent({ goals }: GoalsPageContentProps) {
-  const activeGoals = goals.filter((g) => !g.is_completed);
-  const completedGoals = goals.filter((g) => g.is_completed);
+  const isCompletedGoal = (goal: Goal) => goal.is_completed || goal.status === "completed";
+
+  const activeGoals = goals.filter((g) => !isCompletedGoal(g));
+  const completedGoals = goals.filter((g) => isCompletedGoal(g));
 
   return (
     <div className="space-y-6">
@@ -38,24 +42,6 @@ export function GoalsPageContent({ goals }: GoalsPageContentProps) {
             {activeGoals.map((goal) => (
               <div key={goal.id}>
                 <GoalCard goal={goal} />
-                {!goal.ai_advice && (
-                  <form
-                    action={async () => {
-                      const fd = new FormData();
-                      fd.append("goalId", goal.id);
-                      fd.append("goalTitle", goal.title);
-                      await getGoalAIAdviceAction(fd);
-                    }}
-                    className="mt-2"
-                  >
-                    <button
-                      type="submit"
-                      className="w-full px-4 py-2 text-sm bg-purple-100 text-purple-700 hover:bg-purple-200 rounded-lg font-medium transition-colors"
-                    >
-                      ✨ Get AI Advice
-                    </button>
-                  </form>
-                )}
               </div>
             ))}
           </div>

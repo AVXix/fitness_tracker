@@ -168,13 +168,22 @@ export async function addGoalAction(formData: FormData) {
     return;
   }
 
+  const enableProgressTracking = String(formData.get("enableProgressTracking") ?? "").trim() === "on";
+  const targetValue = enableProgressTracking ? parseOptionalNumber(formData.get("targetValue")) : null;
+  const currentValueRaw = parseOptionalNumber(formData.get("currentValue"));
+  const currentValue = enableProgressTracking ? (currentValueRaw ?? 0) : null;
+  const targetUnit = enableProgressTracking
+    ? String(formData.get("targetUnit") ?? "").trim() || null
+    : null;
+
   await supabase.from("goals").insert({
     user_id: user.id,
     title,
     category: String(formData.get("category") ?? "fitness").trim(),
     target_date: String(formData.get("targetDate") ?? "").trim() || null,
-    target_value: parseOptionalNumber(formData.get("targetValue")),
-    target_unit: String(formData.get("targetUnit") ?? "").trim() || null,
+    target_value: targetValue,
+    current_value: currentValue,
+    target_unit: targetUnit,
     notes: String(formData.get("notes") ?? "").trim() || null,
   });
 
@@ -215,6 +224,230 @@ export async function completeGoalAction(formData: FormData) {
   const supabase = await createSupabaseServerClient();
 
   if (!supabase) {
+    return false;
+  }
+
+  const goalId = String(formData.get("goalId") ?? "").trim();
+
+  if (!goalId) {
+    return false;
+  }
+
+  const primaryUpdate = await supabase
+    .from("goals")
+    .update({ is_completed: true, status: "completed" })
+    .eq("id", goalId)
+    .eq("user_id", user.id);
+
+  if (primaryUpdate.error) {
+    // Backward-compat fallback for schemas that do not yet include `is_completed`.
+    const fallbackUpdate = await supabase
+      .from("goals")
+      .update({ status: "completed" })
+      .eq("id", goalId)
+      .eq("user_id", user.id);
+
+    if (fallbackUpdate.error) {
+      return false;
+    }
+  }
+
+  revalidatePath("/goals");
+  return true;
+}
+
+export async function toggleGoalCompletionAction(formData: FormData) {
+  const user = await requireUser();
+  const supabase = await createSupabaseServerClient();
+
+  if (!supabase) {
+    return false;
+  }
+
+  const goalId = String(formData.get("goalId") ?? "").trim();
+  const completedValue = String(formData.get("completed") ?? "false").trim();
+  const completed = completedValue === "true";
+  const status = completed ? "completed" : "active";
+
+  if (!goalId) {
+    return false;
+  }
+
+  const primaryUpdate = await supabase
+    .from("goals")
+    .update({ is_completed: completed, status })
+    .eq("id", goalId)
+    .eq("user_id", user.id);
+
+  if (primaryUpdate.error) {
+    // Backward-compat fallback for schemas that do not yet include `is_completed`.
+    const fallbackUpdate = await supabase
+      .from("goals")
+      .update({ status })
+      .eq("id", goalId)
+      .eq("user_id", user.id);
+
+    if (fallbackUpdate.error) {
+      return false;
+    }
+  }
+
+  revalidatePath("/goals");
+  return true;
+}
+
+export async function addGoalProgressAction(formData: FormData) {
+  const user = await requireUser();
+  const supabase = await createSupabaseServerClient();
+
+  if (!supabase) {
+    return {
+      ok: false,
+      currentValue: null as number | null,
+      completed: false,
+      error: "Supabase client is not available.",
+    };
+  }
+
+  const goalId = String(formData.get("goalId") ?? "").trim();
+  const progressDelta = parseOptionalNumber(formData.get("progressDelta"));
+
+  if (!goalId || progressDelta === null || progressDelta <= 0) {
+    return {
+      ok: false,
+      currentValue: null as number | null,
+      completed: false,
+      error: "Enter a valid progress amount.",
+    };
+  }
+
+  const goalLookup = await supabase
+    .from("goals")
+    .select("current_value, target_value")
+    .eq("id", goalId)
+    .eq("user_id", user.id)
+    .maybeSingle();
+
+  if (goalLookup.error || !goalLookup.data) {
+    return {
+      ok: false,
+      currentValue: null as number | null,
+      completed: false,
+      error: goalLookup.error?.message || "Could not load goal progress fields.",
+    };
+  }
+
+  const currentValue = Number(goalLookup.data.current_value ?? 0);
+  const targetValue = Number(goalLookup.data.target_value ?? 0);
+  const nextCurrentValue = currentValue + progressDelta;
+  const shouldComplete = targetValue > 0 && nextCurrentValue >= targetValue;
+  const nextStatus = shouldComplete ? "completed" : "active";
+
+  const primaryUpdate = await supabase
+    .from("goals")
+    .update({
+      current_value: nextCurrentValue,
+      status: nextStatus,
+      is_completed: shouldComplete,
+    })
+    .eq("id", goalId)
+    .eq("user_id", user.id);
+
+  if (primaryUpdate.error) {
+    const fallbackUpdate = await supabase
+      .from("goals")
+      .update({
+        current_value: nextCurrentValue,
+        status: nextStatus,
+      })
+      .eq("id", goalId)
+      .eq("user_id", user.id);
+
+    if (fallbackUpdate.error) {
+      return {
+        ok: false,
+        currentValue: null as number | null,
+        completed: false,
+        error: fallbackUpdate.error.message || primaryUpdate.error.message,
+      };
+    }
+  }
+
+  revalidatePath("/goals");
+  return {
+    ok: true,
+    currentValue: nextCurrentValue,
+    completed: shouldComplete,
+    error: null as string | null,
+  };
+}
+
+export async function updateGoalAction(formData: FormData) {
+  const user = await requireUser();
+  const supabase = await createSupabaseServerClient();
+
+  if (!supabase) {
+    return;
+  }
+
+  const goalId = String(formData.get("goalId") ?? "").trim();
+  const title = String(formData.get("title") ?? "").trim();
+  const status = String(formData.get("status") ?? "active").trim();
+  const targetValue = parseOptionalNumber(formData.get("targetValue"));
+  const currentValue = parseOptionalNumber(formData.get("currentValue"));
+  const targetUnit = String(formData.get("targetUnit") ?? "").trim() || null;
+
+  if (!goalId || !title || !["active", "paused", "completed"].includes(status)) {
+    return;
+  }
+
+  const autoCompleted =
+    targetValue !== null &&
+    currentValue !== null &&
+    targetValue > 0 &&
+    currentValue >= targetValue;
+
+  const nextStatus = autoCompleted ? "completed" : status;
+  const isCompleted = nextStatus === "completed";
+
+  const primaryUpdate = await supabase
+    .from("goals")
+    .update({
+      title,
+      target_date: String(formData.get("targetDate") ?? "").trim() || null,
+      target_value: targetValue,
+      current_value: currentValue,
+      target_unit: targetUnit,
+      status: nextStatus,
+      is_completed: isCompleted,
+    })
+    .eq("id", goalId)
+    .eq("user_id", user.id);
+
+  if (primaryUpdate.error) {
+    // Backward-compat fallback for schemas that do not yet include `is_completed`.
+    await supabase
+      .from("goals")
+      .update({
+        title,
+        target_date: String(formData.get("targetDate") ?? "").trim() || null,
+        target_value: targetValue,
+        current_value: currentValue,
+        target_unit: targetUnit,
+        status: nextStatus,
+      })
+      .eq("id", goalId)
+      .eq("user_id", user.id);
+  }
+
+  revalidatePath("/goals");
+}
+
+export async function deleteGoalAction(formData: FormData) {
+  const user = await requireUser();
+  const supabase = await createSupabaseServerClient();
+
+  if (!supabase) {
     return;
   }
 
@@ -226,7 +459,7 @@ export async function completeGoalAction(formData: FormData) {
 
   await supabase
     .from("goals")
-    .update({ is_completed: true, status: "completed" })
+    .delete()
     .eq("id", goalId)
     .eq("user_id", user.id);
 
