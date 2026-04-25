@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { createForumPostAction } from "@/app/fitness-actions";
+import { PendingSubmitButton } from "@/components/PendingSubmitButton";
 
 interface CreatePostFormProps {
   isLoggedIn: boolean;
@@ -20,8 +21,8 @@ export function CreatePostForm({ isLoggedIn, triggerRef }: CreatePostFormProps) 
       />
 
       {isOpen && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-          <div className="rounded-2xl border border-zinc-200 bg-white p-6 shadow-lg w-full max-w-2xl mx-4">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60">
+          <div className="mx-4 w-full max-w-2xl rounded-xl border border-zinc-200 bg-white p-6 shadow-lg">
             <div className="flex items-center justify-between mb-4">
               <h2 className="text-lg font-semibold text-zinc-950">Start a Discussion</h2>
               <button
@@ -67,17 +68,16 @@ export function CreatePostForm({ isLoggedIn, triggerRef }: CreatePostFormProps) 
                 </div>
 
                 <div className="flex gap-3">
-                  <button
-                    type="submit"
-                    className="flex-1 rounded-xl bg-zinc-950 px-4 py-2.5 text-white font-medium hover:bg-zinc-800"
-                    onClick={() => setIsOpen(false)}
+                  <PendingSubmitButton
+                    className="flex-1 rounded-full bg-orange-600 px-4 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-orange-500 disabled:cursor-not-allowed disabled:opacity-70"
+                    pendingLabel="Posting..."
                   >
-                    Post Discussion
-                  </button>
+                    Post
+                  </PendingSubmitButton>
                   <button
                     type="button"
                     onClick={() => setIsOpen(false)}
-                    className="flex-1 rounded-xl border border-zinc-300 px-4 py-2.5 text-zinc-700 font-medium hover:bg-zinc-50"
+                    className="flex-1 rounded-full border border-zinc-300 px-4 py-2.5 text-sm font-semibold text-zinc-700 hover:bg-zinc-50"
                   >
                     Cancel
                   </button>

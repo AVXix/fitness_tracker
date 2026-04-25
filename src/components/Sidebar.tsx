@@ -10,6 +10,8 @@ const navItems = [
   { label: "Workouts", href: "/workouts" },
   { label: "Weight & Calorie Tracker", href: "/weight-tracker" },
   { label: "Goals", href: "/goals" },
+  { label: "Store", href: "/store" },
+  { label: "Hire Trainers", href: "/trainers" },
   { label: "Analytics", href: "/analytics" },
   { label: "Community Forum", href: "/forum" },
 ];

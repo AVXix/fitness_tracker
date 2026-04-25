@@ -1,36 +1,135 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Fitness Tracker
 
-## Getting Started
+Maintainer guide for the Next.js + Supabase fitness tracking app.
 
-First, run the development server:
+## Stack
+
+- Next.js App Router (TypeScript)
+- React 19
+- Supabase (Auth + Postgres + RLS)
+- Tailwind CSS
+
+## What the app includes
+
+- Authenticated dashboard and profile
+- Goals, weight logs, calorie logs, workouts, exercise logs
+- Community forum with post/comment voting
+- Trainer discovery, hire requests, and ratings
+
+## Repository structure
+
+- src/app: route handlers, pages, server actions
+- src/app/actions: domain-split server action modules
+- src/components: UI components
+- src/lib: data and integration helpers
+- src/lib/supabase: Supabase client/server/env/schema helpers
+- supabase/migrations: SQL schema migrations
+- docs in root: setup and troubleshooting guides
+
+## Local development
+
+1. Install dependencies:
+
+```bash
+npm install
+```
+
+2. Add environment variables in .env (or .env.local):
+
+```bash
+NEXT_PUBLIC_SUPABASE_URL=...
+NEXT_PUBLIC_SUPABASE_ANON_KEY=...
+```
+
+3. Start dev server:
 
 ```bash
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+4. Lint:
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+```bash
+npm run lint
+```
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+## Supabase setup and migration order
 
-## Learn More
+Run migrations manually in Supabase SQL Editor in chronological order.
 
-To learn more about Next.js, take a look at the following resources:
+Core product schema:
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+1. supabase/migrations/20260410150000_fitness_tracker_schema.sql
+2. supabase/migrations/20260410173000_expand_product_schema.sql
+3. supabase/migrations/20260420_add_calorie_logs.sql
+4. supabase/migrations/20260420_add_forum.sql
+5. supabase/migrations/20260420_add_forum_functions.sql
+6. supabase/migrations/20260420_update_goals.sql
+7. supabase/migrations/20260420_update_workouts_for_exercises.sql
+8. supabase/migrations/20260420193000_normalize_tracker_log_columns.sql
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+Forum votes and compatibility patches:
 
-## Deploy on Vercel
+1. supabase/migrations/20260424103000_fix_forum_votes_compat.sql
+2. supabase/migrations/20260424113000_forum_votes_rls.sql
+3. supabase/migrations/20260424120000_forum_votes_hotfix.sql
+4. supabase/migrations/20260424123000_forum_votes_cache_and_grants.sql
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+Forum author snapshot and profile/trainer patches:
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+1. supabase/migrations/20260424134500_profiles_select_authenticated_for_forum.sql
+2. supabase/migrations/20260424143000_store_forum_author_name_snapshot.sql
+3. supabase/migrations/20260424152000_forum_posted_by_commente_by_snapshot.sql
+4. supabase/migrations/20260424165000_profiles_is_trainer.sql
+5. supabase/migrations/20260424174000_trainers_contact_hiring_rating.sql
+6. supabase/migrations/20260424193000_trainer_ratings_schema_hardening.sql
+
+## Schema validation behavior
+
+- Forum schema checks run in forum routes.
+- Trainer schema checks run in trainers route.
+- Checks are no longer run from the global authenticated layout.
+- Missing table warnings point maintainers to migration fixes instead of crashing page rendering.
+
+## Action-layer conventions
+
+Server actions are split by domain under src/app/actions:
+
+- profile-actions.ts
+- goal-actions.ts
+- forum-actions.ts
+- trainer-actions.ts
+- exercise-actions.ts
+- shared.ts for common helper logic
+
+Compatibility note:
+
+- src/app/fitness-actions.ts remains as a re-export barrel so existing imports continue to work.
+
+## Common troubleshooting
+
+Forum voting fails with missing table error:
+
+- Run forum vote migrations listed above
+- Verify with:
+
+```sql
+select to_regclass('public.forum_votes') as forum_votes_table;
+```
+
+Trainer ratings fail with missing table error:
+
+- Run trainer rating migrations listed above
+- Verify with:
+
+```sql
+select to_regclass('public.trainer_ratings') as trainer_ratings_table;
+```
+
+## Related docs
+
+- SUPABASE_SETUP.md
+- FORUM_SETUP.md
+- FORUM_VOTES_FIX.md
+- REQUIREMENTS.md
+- AGENTS.md

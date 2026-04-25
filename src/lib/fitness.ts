@@ -3,6 +3,8 @@ import { createSupabaseServerClient } from "@/lib/supabase/server";
 type ProfileRecord = {
   id: string;
   display_name: string | null;
+  is_trainer: boolean | null;
+  trainer_contact: string | null;
   age: number | null;
   height_cm: number | null;
   gender: string | null;

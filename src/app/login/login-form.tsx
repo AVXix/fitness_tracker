@@ -38,7 +38,7 @@ export function LoginForm() {
         return;
       }
 
-      router.push("/profile");
+      router.push("/dashboard");
       router.refresh();
     });
   }

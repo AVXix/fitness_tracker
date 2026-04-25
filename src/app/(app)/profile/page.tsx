@@ -1,4 +1,5 @@
 import { saveProfileAction } from "@/app/fitness-actions";
+import { TrainerProfileFields } from "@/components/TrainerProfileFields";
 import { getFitnessDashboardData } from "@/lib/fitness";
 import { getCurrentUser } from "@/lib/supabase/server";
 
@@ -139,6 +140,11 @@ export default async function ProfilePage() {
               className="w-full rounded-xl border border-zinc-300 px-3 py-2.5"
             />
           </div>
+
+          <TrainerProfileFields
+            defaultIsTrainer={!!dashboard.profile?.is_trainer}
+            defaultTrainerContact={dashboard.profile?.trainer_contact ?? ""}
+          />
 
           <button type="submit" className="rounded-xl bg-zinc-950 px-4 py-2.5 text-white">
             Save profile

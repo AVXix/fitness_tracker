@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useRef } from "react";
 import { ForumPostCard } from "@/components/ForumPostCard";
 import { CreatePostForm } from "@/components/CreatePostForm";
@@ -21,9 +22,10 @@ interface ForumPageContentProps {
   posts: ForumPost[];
   user: { id: string } | null;
   sortBy: SortBy;
+  voteError?: string | null;
 }
 
-export function ForumPageContent({ posts, user, sortBy }: ForumPageContentProps) {
+export function ForumPageContent({ posts, user, sortBy, voteError }: ForumPageContentProps) {
   const modalTriggerRef = useRef<HTMLButtonElement | null>(null);
 
   const handleNewDiscussionClick = () => {
@@ -33,64 +35,110 @@ export function ForumPageContent({ posts, user, sortBy }: ForumPageContentProps)
   };
 
   return (
-    <div className="space-y-6">
-      {/* Header with New Discussion Button */}
-      <div className="flex items-start justify-between">
-        <div>
-          <h1 className="text-3xl font-semibold tracking-tight">Fitness Community Forum</h1>
-          <p className="mt-1 text-sm text-zinc-600">
-            Share your fitness journey, ask questions, and get support from the community
-          </p>
-        </div>
-        <button
-          onClick={handleNewDiscussionClick}
-          className="whitespace-nowrap rounded-xl bg-zinc-950 px-4 py-2.5 text-white font-medium hover:bg-zinc-800 transition-colors h-fit"
-        >
-          + New Discussion
-        </button>
-      </div>
+    <div className="mx-auto grid w-full max-w-6xl gap-4 lg:grid-cols-[minmax(0,1fr)_300px]">
+      <div className="space-y-4">
+        {voteError ? (
+          <div className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800">
+            Vote failed: {voteError}
+          </div>
+        ) : null}
 
-      {/* Filter Tabs */}
-      <div className="flex gap-3 border-b border-zinc-200">
-        <FilterTab
-          label="🔥 Trending"
-          value="trending"
-          isActive={sortBy === "trending"}
-        />
-        <FilterTab
-          label="⏰ Most Recent"
-          value="recent"
-          isActive={sortBy === "recent"}
-        />
-        <FilterTab
-          label="💬 Most Discussed"
-          value="discussed"
-          isActive={sortBy === "discussed"}
-        />
-      </div>
-
-      {/* Posts List */}
-      <div className="space-y-3">
-        {posts.length > 0 ? (
-          posts.map((post) => (
-            <ForumPostCard
-              key={post.id}
-              post={post}
-              currentUserId={user?.id}
-            />
-          ))
-        ) : (
-          <div className="rounded-2xl border border-zinc-200 bg-white p-8 text-center">
-            <p className="text-zinc-600">
-              {sortBy === "trending"
-                ? "No trending posts yet. Be the first to start a discussion!"
-                : sortBy === "discussed"
-                ? "No discussions yet."
-                : "No recent posts yet."}
+        <div className="flex items-start justify-between rounded-xl border border-zinc-200 bg-white p-4">
+          <div>
+            <h1 className="text-2xl font-semibold tracking-tight text-zinc-950">FitTracker</h1>
+            <p className="mt-1 text-sm text-zinc-600">
+              Community tips, progress updates, and training Q&A.
             </p>
           </div>
-        )}
+          <button
+            onClick={handleNewDiscussionClick}
+            className="h-fit whitespace-nowrap rounded-full bg-orange-600 px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-orange-500"
+          >
+            Create Post
+          </button>
+        </div>
+
+        <div className="flex flex-wrap gap-2 rounded-xl border border-zinc-200 bg-white p-2">
+          <FilterTab
+            label="Hot"
+            value="trending"
+            isActive={sortBy === "trending"}
+          />
+          <FilterTab
+            label="New"
+            value="recent"
+            isActive={sortBy === "recent"}
+          />
+          <FilterTab
+            label="Top"
+            value="discussed"
+            isActive={sortBy === "discussed"}
+          />
+        </div>
+
+        <div className="space-y-2">
+          {posts.length > 0 ? (
+            posts.map((post) => (
+              <ForumPostCard
+                key={post.id}
+                post={post}
+                currentUserId={user?.id}
+              />
+            ))
+          ) : (
+            <div className="rounded-xl border border-zinc-200 bg-white p-8 text-center">
+              <p className="text-zinc-600">
+                {sortBy === "trending"
+                  ? "No hot posts yet. Start the first thread."
+                  : sortBy === "discussed"
+                  ? "No top discussions yet."
+                  : "No new posts yet."}
+              </p>
+            </div>
+          )}
+        </div>
       </div>
+
+      <aside className="hidden space-y-4 lg:block">
+        {voteError?.includes("forum_votes") ? (
+          <div className="sticky top-8 rounded-xl border border-yellow-200 bg-yellow-50 p-4">
+            <h2 className="text-sm font-semibold text-yellow-900">⚠️ Setup Required</h2>
+            <p className="mt-2 text-xs text-yellow-800">
+              Forum voting needs a database table. See the{" "}
+              <a
+                href="/FORUM_SETUP.md"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="underline hover:no-underline"
+              >
+                setup guide
+              </a>
+              .
+            </p>
+          </div>
+        ) : null}
+        
+        <div className="sticky top-8 rounded-xl border border-zinc-200 bg-white p-4">
+          <h2 className="text-sm font-semibold text-zinc-900">About FitTracker</h2>
+          <p className="mt-2 text-sm text-zinc-600">
+            Ask workout questions, share routines, and help others stay consistent.
+          </p>
+          <div className="mt-4 grid grid-cols-3 gap-2 text-center text-xs">
+            <div className="rounded-lg bg-zinc-100 px-2 py-2">
+              <div className="text-base font-semibold text-zinc-900">{posts.length}</div>
+              <div className="text-zinc-600">Posts</div>
+            </div>
+            <div className="rounded-lg bg-zinc-100 px-2 py-2">
+              <div className="text-base font-semibold text-zinc-900">24/7</div>
+              <div className="text-zinc-600">Active</div>
+            </div>
+            <div className="rounded-lg bg-zinc-100 px-2 py-2">
+              <div className="text-base font-semibold text-zinc-900">+1</div>
+              <div className="text-zinc-600">Daily</div>
+            </div>
+          </div>
+        </div>
+      </aside>
 
       {/* Create Post Form Modal */}
       <CreatePostForm isLoggedIn={!!user} triggerRef={modalTriggerRef} />
@@ -100,15 +148,15 @@ export function ForumPageContent({ posts, user, sortBy }: ForumPageContentProps)
 
 function FilterTab({ label, value, isActive }: { label: string; value: string; isActive: boolean }) {
   return (
-    <a
+    <Link
       href={`?sort=${value}`}
-      className={`px-4 py-3 font-medium text-sm transition-colors border-b-2 ${
+      className={`rounded-full px-4 py-2 text-sm font-medium transition-colors ${
         isActive
-          ? "border-zinc-950 text-zinc-950"
-          : "border-transparent text-zinc-600 hover:text-zinc-900"
+          ? "bg-zinc-900 text-white"
+          : "text-zinc-600 hover:bg-zinc-100 hover:text-zinc-900"
       }`}
     >
       {label}
-    </a>
+    </Link>
   );
 }

@@ -1,0 +1,79 @@
+fitnesstracker/                                    # Project root
+|-- .codex/                                        # Local Copilot/Codex workspace metadata
+|-- .env                                           # Local environment variables (secrets)
+|-- .env.example                                   # Example env file for setup
+|-- .gitignore                                     # Git ignore rules
+|-- AGENTS.md                                      # Agent instructions for this repo
+|-- CLAUDE.md                                      # Additional assistant instructions
+|-- PROJECT_PROGRESS.md                            # Project milestone/progress notes
+|-- README.md                                      # Main project documentation
+|-- REQUIREMENTS.md                                # Functional and technical requirements
+|-- SUPABASE_SETUP.md                              # Supabase setup and migration guide
+|-- er and wireframe/                              # Design artifacts
+|   |-- WireframeBoard.png                         # UI wireframe image
+|   |-- er_diagram.mmd                             # Mermaid ER diagram source
+|   `-- erdiagram.png                              # Rendered ER diagram image
+|-- eslint.config.mjs                              # ESLint configuration
+|-- middleware.ts                                  # Next.js middleware (routing/auth checks)
+|-- next-env.d.ts                                  # Next.js TypeScript declarations
+|-- next.config.ts                                 # Next.js configuration
+|-- package-lock.json                              # NPM dependency lockfile
+|-- package.json                                   # Project scripts and dependencies
+|-- postcss.config.mjs                             # PostCSS config (Tailwindprocessing)
+|-- prisma/                                        # Legacy Prisma artifacts
+|   `-- migrations/
+|       `-- 20260327164731_milestone2_minimal/    # Older Prisma migration snapshot
+|-- public/                                        # Static assets served as-is
+|   |-- file.svg
+|   |-- globe.svg
+|   |-- next.svg
+|   |-- vercel.svg
+|   `-- window.svg
+|-- src/                                           # Application source code
+|   |-- app/                                       # Next.js App Router routes and layouts
+|   |   |-- (app)/                                 # Route group for authenticated app pages
+|   |   |   |-- analytics/                         # Analytics feature routes
+|   |   |   |-- dashboard/                         # Dashboard route
+|   |   |   |-- forum/                             # Authenticated forum route
+|   |   |   |-- goals/                             # Goals route
+|   |   |   |-- layout.tsx                         # Shared layout for (app) routes
+|   |   |   |-- profile/                           # Profile route
+|   |   |   |-- weight-tracker/                    # Weight tracker route
+|   |   |   `-- workouts/                          # Workouts route
+|   |   |-- auth-actions.ts                        # Server actions for auth flows
+|   |   |-- favicon.ico                            # App favicon
+|   |   |-- fitness-actions.ts                     # Server actions for fitness features
+|   |   |-- forum/                                 # Additional forum app route folder
+|   |   |-- globals.css                            # Global app styles
+|   |   |-- layout.tsx                             # Root app layout
+|   |   |-- login/                                 # Login route
+|   |   |-- page.tsx                               # Landing/home page route
+|   |   `-- register/                              # Register route
+|   |-- components/                                # Reusable UI components
+|   |   |-- CalorieTracker.tsx                     # Calorie tracker UI
+|   |   |-- CreatePostForm.tsx                     # Forum create-post form
+|   |   |-- Dashboard.tsx                          # Dashboard summary component
+|   |   |-- ExerciseForm.tsx                       # Exercise entry form
+|   |   |-- ExerciseHistory.tsx                    # Exercise history list
+|   |   |-- ForumPageContent.tsx                   # Forum page composition
+|   |   |-- ForumPostCard.tsx                      # Forum post card component
+|   |   |-- GoalCard.tsx                           # Single goal card (progress/actions)
+|   |   |-- GoalForm.tsx                           # New goal creation form
+|   |   |-- GoalsPageContent.tsx                   # Goals page list sections
+|   |   |-- Sidebar.tsx                            # App navigation sidebar
+|   |   `-- WeightTracker.tsx                      # Weight tracker UI
+|   `-- lib/                                       # Shared data/util code
+|       |-- fitness.ts                             # Fitness data loading/transforms
+|       `-- supabase/                              # Supabase client/env/server helpers
+|-- supabase/                                      # Supabase SQL migrations
+|   `-- migrations/
+|       |-- 20260410150000_fitness_tracker_schema.sql      # Base schema migration
+|       |-- 20260410173000_expand_product_schema.sql       # Expanded domain tables
+|       |-- 20260420193000_normalize_tracker_log_columns.sql # Tracker column normalization
+|       |-- 20260420_add_calorie_logs.sql                  # Calorie log updates
+|       |-- 20260420_add_forum.sql                         # Forum tables setup
+|       |-- 20260420_add_forum_functions.sql               # Forum DB functions/triggers
+|       |-- 20260420_update_goals.sql                      # Goals table updates
+|       `-- 20260420_update_workouts_for_exercises.sql     # Workout/exercise schema update
+|-- tsconfig.json                                  # TypeScript config
+`-- tsconfig.tsbuildinfo                           # TypeScript incremental build cache

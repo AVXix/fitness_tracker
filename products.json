@@ -1,0 +1,75 @@
+{
+  "category": "Fitness Supplements",
+  "total_products": 50,
+  "products": [
+    {"id":1,"name":"Pre Workout Alpha","type":"Pre Workout","image":"https://images.unsplash.com/photo-1599058917212-d750089bc07e"},
+    {"id":2,"name":"Pre Workout Beta","type":"Pre Workout","image":"https://images.unsplash.com/photo-1605296867304-46d5465a13f1"},
+    {"id":3,"name":"Pre Workout Gamma","type":"Pre Workout","image":"https://images.unsplash.com/photo-1583454110551-21f2fa2afe61"},
+    {"id":4,"name":"Pre Workout Pump X","type":"Pre Workout","image":"https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b"},
+    {"id":5,"name":"Pre Workout Nitro","type":"Pre Workout","image":"https://images.unsplash.com/photo-1584464491033-06628f3a6b7b"},
+
+    {"id":6,"name":"Whey Protein Gold","type":"Protein","image":"https://images.unsplash.com/photo-1594737625785-cb5e0f5e9f3d"},
+    {"id":7,"name":"Whey Protein Isolate","type":"Protein","image":"https://images.unsplash.com/photo-1600180758890-6b94519a8ba7"},
+    {"id":8,"name":"Mass Gainer Pro","type":"Mass Gainer","image":"https://images.unsplash.com/photo-1593079831268-3381b0db4a77"},
+    {"id":9,"name":"Casein Protein Night","type":"Protein","image":"https://images.unsplash.com/photo-1611078489935-0cb964de46d6"},
+    {"id":10,"name":"Vegan Protein Blend","type":"Protein","image":"https://images.unsplash.com/photo-1622484212850-eb596d769edc"},
+
+    {"id":11,"name":"Creatine Monohydrate X","type":"Creatine","image":"https://images.unsplash.com/photo-1622483767028-3f66f32aef68"},
+    {"id":12,"name":"Creatine HCL Power","type":"Creatine","image":"https://images.unsplash.com/photo-1622484212850-eb596d769edc"},
+    {"id":13,"name":"Creatine Micronized","type":"Creatine","image":"https://images.unsplash.com/photo-1599058917212-d750089bc07e"},
+
+    {"id":14,"name":"Fat Burner Thermo","type":"Fat Burner","image":"https://images.unsplash.com/photo-1554284126-aa88f22d8b74"},
+    {"id":15,"name":"Fat Burner Extreme","type":"Fat Burner","image":"https://images.unsplash.com/photo-1605296867304-46d5465a13f1"},
+    {"id":16,"name":"CLA Lean","type":"Fat Burner","image":"https://images.unsplash.com/photo-1583454110551-21f2fa2afe61"},
+
+    {"id":17,"name":"BCAA 2:1:1 Fuel","type":"BCAA","image":"https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b"},
+    {"id":18,"name":"BCAA Recovery Mix","type":"BCAA","image":"https://images.unsplash.com/photo-1584464491033-06628f3a6b7b"},
+    {"id":19,"name":"EAA Essential Amino","type":"Amino Acids","image":"https://images.unsplash.com/photo-1594737625785-cb5e0f5e9f3d"},
+
+    {"id":20,"name":"Multivitamin Daily","type":"Multivitamin","image":"https://images.unsplash.com/photo-1582719478250-c89cae4dc85b"},
+    {"id":21,"name":"Men's Multivitamin","type":"Multivitamin","image":"https://images.unsplash.com/photo-1580281657521-6b2d6cddc5b5"},
+    {"id":22,"name":"Women's Multivitamin","type":"Multivitamin","image":"https://images.unsplash.com/photo-1615485737651-3b8c8c5e9f82"},
+
+    {"id":23,"name":"Fish Oil Omega 3","type":"Omega","image":"https://images.unsplash.com/photo-1580281658629-4b9f56bfc6a3"},
+    {"id":24,"name":"Omega 3 Capsules","type":"Omega","image":"https://images.unsplash.com/photo-1582719478250-c89cae4dc85b"},
+
+    {"id":25,"name":"ZMA Recovery","type":"Recovery","image":"https://images.unsplash.com/photo-1580281657521-6b2d6cddc5b5"},
+    {"id":26,"name":"Glutamine Powder","type":"Recovery","image":"https://images.unsplash.com/photo-1615485737651-3b8c8c5e9f82"},
+
+    {"id":27,"name":"Mass Gainer Bulk","type":"Mass Gainer","image":"https://images.unsplash.com/photo-1593079831268-3381b0db4a77"},
+    {"id":28,"name":"Serious Mass Pro","type":"Mass Gainer","image":"https://images.unsplash.com/photo-1600180758890-6b94519a8ba7"},
+
+    {"id":29,"name":"Electrolyte Hydration Mix","type":"Hydration","image":"https://images.unsplash.com/photo-1554284126-aa88f22d8b74"},
+    {"id":30,"name":"Hydration Powder","type":"Hydration","image":"https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b"},
+
+    {"id":31,"name":"Protein Bar Chocolate","type":"Snack","image":"https://images.unsplash.com/photo-1605296867304-46d5465a13f1"},
+    {"id":32,"name":"Protein Bar Peanut","type":"Snack","image":"https://images.unsplash.com/photo-1583454110551-21f2fa2afe61"},
+
+    {"id":33,"name":"Collagen Peptides","type":"Collagen","image":"https://images.unsplash.com/photo-1582719478250-c89cae4dc85b"},
+    {"id":34,"name":"Joint Support Formula","type":"Joint","image":"https://images.unsplash.com/photo-1580281657521-6b2d6cddc5b5"},
+
+    {"id":35,"name":"Melatonin Sleep Aid","type":"Sleep","image":"https://images.unsplash.com/photo-1615485737651-3b8c8c5e9f82"},
+    {"id":36,"name":"Vitamin D3","type":"Vitamin","image":"https://images.unsplash.com/photo-1580281658629-4b9f56bfc6a3"},
+    {"id":37,"name":"Vitamin C Complex","type":"Vitamin","image":"https://images.unsplash.com/photo-1582719478250-c89cae4dc85b"},
+
+    {"id":38,"name":"Ashwagandha Root","type":"Herbal","image":"https://images.unsplash.com/photo-1554284126-aa88f22d8b74"},
+    {"id":39,"name":"Turmeric Extract","type":"Herbal","image":"https://images.unsplash.com/photo-1605296867304-46d5465a13f1"},
+
+    {"id":40,"name":"Test Booster X","type":"Hormone Support","image":"https://images.unsplash.com/photo-1583454110551-21f2fa2afe61"},
+    {"id":41,"name":"Natural Testosterone Support","type":"Hormone Support","image":"https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b"},
+
+    {"id":42,"name":"Probiotic Gut Health","type":"Gut Health","image":"https://images.unsplash.com/photo-1580281658629-4b9f56bfc6a3"},
+    {"id":43,"name":"Digestive Enzymes","type":"Gut Health","image":"https://images.unsplash.com/photo-1582719478250-c89cae4dc85b"},
+
+    {"id":44,"name":"Energy Booster Caps","type":"Energy","image":"https://images.unsplash.com/photo-1599058917212-d750089bc07e"},
+    {"id":45,"name":"Focus Nootropic Blend","type":"Nootropic","image":"https://images.unsplash.com/photo-1600180758890-6b94519a8ba7"},
+
+    {"id":46,"name":"Pump Formula X","type":"Pump","image":"https://images.unsplash.com/photo-1593079831268-3381b0db4a77"},
+    {"id":47,"name":"Nitric Oxide Booster","type":"Pump","image":"https://images.unsplash.com/photo-1622483767028-3f66f32aef68"},
+
+    {"id":48,"name":"Hydro Whey RTD","type":"Protein Drink","image":"https://images.unsplash.com/photo-1594737625785-cb5e0f5e9f3d"},
+    {"id":49,"name":"Ready Protein Shake","type":"Protein Drink","image":"https://images.unsplash.com/photo-1605296867304-46d5465a13f1"},
+
+    {"id":50,"name":"Electrolyte Tablets","type":"Hydration","image":"https://images.unsplash.com/photo-1554284126-aa88f22d8b74"}
+  ]
+}
