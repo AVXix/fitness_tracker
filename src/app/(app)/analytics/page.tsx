@@ -105,6 +105,97 @@ function linePoints(values: Array<number | null>, width: number, height: number)
   return points.join(" ");
 }
 
+function estimateMaintenanceCalories(params: {
+  dateKeys: string[];
+  caloriesByDate: Map<string, number>;
+  latestWeightByDate: Map<string, number>;
+}) {
+  const { dateKeys, caloriesByDate, latestWeightByDate } = params;
+  const windowDays = 14;
+  const stableWindowAverages: number[] = [];
+  let stableDays = 0;
+
+  for (let start = 0; start <= dateKeys.length - windowDays; start += 1) {
+    const windowKeys = dateKeys.slice(start, start + windowDays);
+    const calorieValues = windowKeys
+      .map((key) => caloriesByDate.get(key))
+      .filter((value): value is number => typeof value === "number");
+
+    const weightPoints = windowKeys
+      .map((key, index) => ({ index, weight: latestWeightByDate.get(key) ?? null }))
+      .filter((entry): entry is { index: number; weight: number } => entry.weight !== null);
+
+    if (calorieValues.length < 10 || weightPoints.length < 2) {
+      continue;
+    }
+
+    const first = weightPoints[0];
+    const last = weightPoints[weightPoints.length - 1];
+    const spanDays = Math.max(1, last.index - first.index + 1);
+    const deltaKg = last.weight - first.weight;
+    const percentChange = Math.abs((deltaKg / Math.max(1, first.weight)) * 100);
+    const weeklyChangeKg = Math.abs((deltaKg / spanDays) * 7);
+
+    if (percentChange <= 0.4 && weeklyChangeKg <= 0.2) {
+      const avgCalories = calorieValues.reduce((sum, value) => sum + value, 0) / calorieValues.length;
+      stableWindowAverages.push(avgCalories);
+      stableDays += windowKeys.length;
+    }
+  }
+
+  if (stableWindowAverages.length > 0) {
+    const estimatedCalories = Math.round(
+      stableWindowAverages.reduce((sum, value) => sum + value, 0) / stableWindowAverages.length
+    );
+    const confidence = stableWindowAverages.length >= 3 ? "high" : stableWindowAverages.length >= 2 ? "medium" : "low";
+    const note =
+      confidence === "high"
+        ? "Based on multiple stable-weight windows."
+        : confidence === "medium"
+          ? "Based on some stable-weight windows."
+          : "Limited stable-weight data; estimate may shift with more logs.";
+
+    return {
+      calories: estimatedCalories,
+      confidence,
+      note,
+      stableWindowCount: stableWindowAverages.length,
+      stableDays,
+    };
+  }
+
+  const calorieEntries = dateKeys
+    .map((key) => caloriesByDate.get(key))
+    .filter((value): value is number => typeof value === "number");
+  const weightEntries = dateKeys
+    .map((key) => latestWeightByDate.get(key))
+    .filter((value): value is number => typeof value === "number");
+
+  if (calorieEntries.length >= 10 && weightEntries.length >= 2) {
+    const estimatedCalories = Math.round(
+      calorieEntries.reduce((sum, value) => sum + value, 0) / calorieEntries.length
+    );
+    const weightDrift = weightEntries[weightEntries.length - 1] - weightEntries[0];
+    const note = `No stable window found yet (weight drift ${weightDrift >= 0 ? "+" : ""}${weightDrift.toFixed(1)} kg).`;
+
+    return {
+      calories: estimatedCalories,
+      confidence: "low",
+      note,
+      stableWindowCount: 0,
+      stableDays: 0,
+    };
+  }
+
+  return {
+    calories: null,
+    confidence: "low",
+    note: "Need at least 10 calorie days and 2 weight logs in range.",
+    stableWindowCount: 0,
+    stableDays: 0,
+  };
+}
+
 export default async function AnalyticsPage({
   searchParams,
 }: {
@@ -274,6 +365,17 @@ export default async function AnalyticsPage({
   const calorieEntries = calorieSeries.filter((value): value is number => value !== null);
   const avgCalories =
     calorieEntries.length > 0 ? Math.round(calorieEntries.reduce((sum, value) => sum + value, 0) / calorieEntries.length) : 0;
+  const maintenanceEstimate = estimateMaintenanceCalories({
+    dateKeys,
+    caloriesByDate,
+    latestWeightByDate,
+  });
+  const maintenanceConfidenceTone =
+    maintenanceEstimate.confidence === "high"
+      ? "text-emerald-600"
+      : maintenanceEstimate.confidence === "medium"
+        ? "text-amber-600"
+        : "text-zinc-500";
 
   return (
     <div className="space-y-6">
@@ -306,7 +408,7 @@ export default async function AnalyticsPage({
         </div>
       )}
 
-      <div className="grid gap-4 md:grid-cols-3">
+      <div className="grid gap-4 md:grid-cols-4">
         <div className="rounded-2xl border border-zinc-200 bg-white p-5 shadow-sm">
           <p className="text-xs font-medium uppercase tracking-wide text-zinc-500">Weight entries</p>
           <p className="mt-2 text-3xl font-semibold text-zinc-950">{weightEntries.length}</p>
@@ -320,6 +422,19 @@ export default async function AnalyticsPage({
           <p className="mt-2 text-3xl font-semibold text-zinc-950">
             {selectedWorkoutMetric === "calories" ? avgWorkoutMetric.toLocaleString() : avgWorkoutMetric}
           </p>
+        </div>
+        <div className="rounded-2xl border border-zinc-200 bg-white p-5 shadow-sm">
+          <p className="text-xs font-medium uppercase tracking-wide text-zinc-500">Maintenance est/day</p>
+          <p className="mt-2 text-3xl font-semibold text-zinc-950">
+            {maintenanceEstimate.calories !== null ? maintenanceEstimate.calories.toLocaleString() : "-"}
+          </p>
+          <p className={`mt-1 text-xs ${maintenanceConfidenceTone}`}>
+            {maintenanceEstimate.confidence} confidence
+            {maintenanceEstimate.stableWindowCount > 0
+              ? ` • ${maintenanceEstimate.stableWindowCount} stable windows`
+              : ""}
+          </p>
+          <p className="mt-1 text-xs text-zinc-500">{maintenanceEstimate.note}</p>
         </div>
       </div>
 
