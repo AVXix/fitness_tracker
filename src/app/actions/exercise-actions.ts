@@ -26,35 +26,26 @@ export async function addExerciseLogAction(formData: FormData) {
     return;
   }
 
-  const { data: workoutData } = await supabase
+  const { data: workoutData, error: workoutError } = await supabase
     .from("workouts")
-    .select("id")
-    .eq("user_id", user.id)
-    .eq("workout_on", workoutDate)
-    .limit(1)
-    .maybeSingle();
-
-  let workoutId = workoutData?.id;
-
-  if (!workoutId) {
-    const { data: newWorkout } = await supabase
-      .from("workouts")
-      .insert({
+    .upsert(
+      {
         user_id: user.id,
         name: `Workout - ${workoutDate}`,
         workout_on: workoutDate,
         workout_type: exerciseType === "cardio" ? "cardio" : "strength",
         category,
-      })
-      .select("id")
-      .single();
+      },
+      { onConflict: "user_id,workout_on" }
+    )
+    .select("id")
+    .single();
 
-    workoutId = newWorkout?.id;
-  }
-
-  if (!workoutId) {
+  if (workoutError || !workoutData?.id) {
     return;
   }
+
+  const workoutId = workoutData.id;
 
   const sets = parseOptionalNumber(formData.get("sets"));
   const reps = parseOptionalNumber(formData.get("reps"));
@@ -62,7 +53,7 @@ export async function addExerciseLogAction(formData: FormData) {
   const duration = parseOptionalNumber(formData.get("duration"));
   const distance = parseOptionalNumber(formData.get("distance"));
 
-  await supabase.from("exercise_logs").insert({
+  const { error: exerciseError } = await supabase.from("exercise_logs").insert({
     workout_id: workoutId,
     user_id: user.id,
     exercise_name: exerciseName,
@@ -77,5 +68,11 @@ export async function addExerciseLogAction(formData: FormData) {
     distance_km: distance,
   });
 
+  if (exerciseError) {
+    console.error("Failed to save exercise log", exerciseError);
+    return;
+  }
+
   revalidatePath("/workouts");
+  revalidatePath("/analytics");
 }

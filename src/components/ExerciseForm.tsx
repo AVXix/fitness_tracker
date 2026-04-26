@@ -300,7 +300,6 @@ export function ExerciseForm() {
                   type="number"
                   name="sets"
                   min="1"
-                  max="10"
                   placeholder="4"
                   className="w-full rounded-xl border border-zinc-300 px-3 py-2.5"
                 />

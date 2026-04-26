@@ -90,16 +90,23 @@ export async function addWorkoutAction(formData: FormData) {
     return;
   }
 
-  await supabase.from("workouts").insert({
-    user_id: user.id,
-    name,
-    workout_on: String(formData.get("workoutOn") ?? "").trim() || new Date().toISOString().slice(0, 10),
-    workout_date: String(formData.get("workoutOn") ?? "").trim() || new Date().toISOString().slice(0, 10),
-    duration_minutes: parseOptionalNumber(formData.get("durationMinutes")),
-    total_minutes: parseOptionalNumber(formData.get("durationMinutes")),
-    calories_burned: parseOptionalNumber(formData.get("caloriesBurned")),
-    notes: String(formData.get("notes") ?? "").trim() || null,
-  });
+  const workoutOn = String(formData.get("workoutOn") ?? "").trim() || new Date().toISOString().slice(0, 10);
+
+  await supabase
+    .from("workouts")
+    .upsert(
+      {
+        user_id: user.id,
+        name,
+        workout_on: workoutOn,
+        workout_date: workoutOn,
+        duration_minutes: parseOptionalNumber(formData.get("durationMinutes")),
+        total_minutes: parseOptionalNumber(formData.get("durationMinutes")),
+        calories_burned: parseOptionalNumber(formData.get("caloriesBurned")),
+        notes: String(formData.get("notes") ?? "").trim() || null,
+      },
+      { onConflict: "user_id,workout_on" }
+    );
 
   revalidatePath("/profile");
 }

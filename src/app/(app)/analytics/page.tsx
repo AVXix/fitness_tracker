@@ -4,19 +4,19 @@ import { createSupabaseServerClient, requireUser } from "@/lib/supabase/server";
 
 const RANGE_OPTIONS = [30, 60, 120] as const;
 const DEFAULT_RANGE = 30;
-const WORKOUT_METRIC_OPTIONS = ["sessions", "calories"] as const;
-const DEFAULT_WORKOUT_METRIC = "sessions";
-
-type WorkoutMetric = (typeof WORKOUT_METRIC_OPTIONS)[number];
 
 type SearchParams = Record<string, string | string[] | undefined>;
 
 type ExerciseAnalyticsRow = {
   muscle_group: string | null;
+  exercise_name?: string | null;
+  exercise_type?: string | null;
+  cardio_intensity?: string | null;
   sets: number | null;
   reps: number | null;
   weight_kg: number | null;
   duration_seconds: number | null;
+  distance_km?: number | null;
   created_at: string;
 };
 
@@ -31,6 +31,28 @@ type WorkoutAnalyticsRow = {
   workout_date: string | null;
 };
 
+const TRACKED_MUSCLE_GROUPS = ["Chest", "Back", "Legs", "Shoulders", "Arms", "Core", "Glutes"] as const;
+
+function normalizeMuscleGroup(label: string) {
+  const text = label.toLowerCase();
+  if (text.includes("chest")) return "Chest";
+  if (text.includes("back")) return "Back";
+  if (text.includes("leg")) return "Legs";
+  if (text.includes("shoulder")) return "Shoulders";
+  if (text.includes("arm") || text.includes("bicep") || text.includes("tricep")) return "Arms";
+  if (text.includes("core") || text.includes("abs")) return "Core";
+  if (text.includes("glute") || text.includes("hip")) return "Glutes";
+  return null;
+}
+
+function normalizeCardioIntensity(label: string | null | undefined) {
+  const text = String(label ?? "").trim().toLowerCase();
+  if (text.includes("low")) return "Low";
+  if (text.includes("moderate")) return "Moderate";
+  if (text.includes("high") || text.includes("hiit") || text.includes("vigorous")) return "High";
+  return "Unknown";
+}
+
 function inferMuscleGroupFromWorkout(row: WorkoutAnalyticsRow) {
   const text = `${row.name ?? ""} ${row.category ?? ""} ${row.workout_type ?? ""}`.toLowerCase();
   if (/(chest|push|bench)/.test(text)) return "Chest";
@@ -41,8 +63,9 @@ function inferMuscleGroupFromWorkout(row: WorkoutAnalyticsRow) {
   if (/(glute|hip)/.test(text)) return "Glutes";
   if (/(core|abs|plank)/.test(text)) return "Core";
   if (/(lower body)/.test(text)) return "Legs";
-  if (/(upper body)/.test(text)) return "Upper Body";
-  return "Full Body";
+  if (/(upper body)/.test(text)) return "Back";
+  if (/(full body)/.test(text)) return "Core";
+  return null;
 }
 
 function toDateKey(date: Date) {
@@ -55,13 +78,6 @@ function parseRange(rawRange: string | undefined) {
     return DEFAULT_RANGE;
   }
   return parsed as (typeof RANGE_OPTIONS)[number];
-}
-
-function parseWorkoutMetric(rawMetric: string | undefined): WorkoutMetric {
-  if (rawMetric === "calories") {
-    return "calories";
-  }
-  return DEFAULT_WORKOUT_METRIC;
 }
 
 function buildDateKeys(days: number) {
@@ -204,9 +220,6 @@ export default async function AnalyticsPage({
   const user = await requireUser();
   const params = await searchParams;
   const selectedRange = parseRange(typeof params.range === "string" ? params.range : undefined);
-  const selectedWorkoutMetric = parseWorkoutMetric(
-    typeof params.workoutMetric === "string" ? params.workoutMetric : undefined
-  );
 
   const dashboard = await getFitnessDashboardData(user.id);
   const dateKeys = buildDateKeys(selectedRange);
@@ -243,9 +256,6 @@ export default async function AnalyticsPage({
   const weightPolyline = linePoints(weightSeries, 1000, 200);
   const caloriePolyline = linePoints(calorieSeries, 1000, 200);
 
-  const workoutSessionsByDate = new Map<string, number>();
-  const workoutCaloriesByDate = new Map<string, number>();
-
   const loggedMacroDays = dateKeys.filter((key) => caloriesByDate.has(key)).length;
   const macroDays = Math.max(1, loggedMacroDays);
   const avgProtein = Math.round(
@@ -267,16 +277,23 @@ export default async function AnalyticsPage({
 
   const supabase = await createSupabaseServerClient();
   let muscleRows: ExerciseAnalyticsRow[] = [];
+  let recommendationRows: ExerciseAnalyticsRow[] = [];
   let workoutRows: WorkoutAnalyticsRow[] = [];
   if (supabase) {
-    const [exerciseResult, workoutsResult] = await Promise.all([
+    const [exerciseResult, recommendationResult, workoutsResult] = await Promise.all([
       supabase
         .from("exercise_logs")
-        .select("muscle_group, sets, reps, weight_kg, duration_seconds, created_at")
+        .select("muscle_group, exercise_name, exercise_type, cardio_intensity, sets, reps, weight_kg, duration_seconds, distance_km, created_at")
         .eq("user_id", user.id)
         .gte("created_at", `${rangeStart}T00:00:00.000Z`)
         .order("created_at", { ascending: false })
         .limit(1000),
+      supabase
+        .from("exercise_logs")
+        .select("muscle_group, exercise_name, exercise_type, cardio_intensity, sets, reps, weight_kg, duration_seconds, distance_km, created_at")
+        .eq("user_id", user.id)
+        .order("created_at", { ascending: false })
+        .limit(2000),
       supabase
         .from("workouts")
         .select("name, category, workout_type, duration_minutes, total_minutes, calories_burned, workout_on, workout_date")
@@ -287,44 +304,58 @@ export default async function AnalyticsPage({
     ]);
 
     muscleRows = (exerciseResult.data ?? []) as ExerciseAnalyticsRow[];
+    recommendationRows = (recommendationResult.data ?? []) as ExerciseAnalyticsRow[];
     workoutRows = (workoutsResult.data ?? []) as WorkoutAnalyticsRow[];
   }
 
-  const muscleStats = new Map<string, { sessions: number; loadScore: number }>();
+  const muscleStats = new Map<string, { sessions: number; loadScore: number }>(
+    TRACKED_MUSCLE_GROUPS.map((name) => [name, { sessions: 0, loadScore: 0 }])
+  );
+
+  const cardioIntensityCounts = new Map<string, number>([
+    ["Low", 0],
+    ["Moderate", 0],
+    ["High", 0],
+    ["Unknown", 0],
+  ]);
+
   for (const row of muscleRows) {
-    const label = row.muscle_group?.trim() || "Unspecified";
+    const normalizedLabel = normalizeMuscleGroup(row.muscle_group ?? "") || normalizeMuscleGroup(row.exercise_name ?? "");
+    const isCardio = String(row.exercise_type ?? "").toLowerCase() === "cardio";
     const sets = Math.max(1, row.sets ?? 1);
     const reps = Math.max(1, row.reps ?? 1);
-    const weight = Math.max(1, row.weight_kg ?? 1);
+    const weight = Math.max(0, row.weight_kg ?? 0);
     const durationMinutes = Math.max(0, (row.duration_seconds ?? 0) / 60);
-    const loadScore = sets * reps * weight + durationMinutes;
+    const distanceKm = Math.max(0, row.distance_km ?? 0);
+    const loadScore = isCardio
+      ? Math.round(durationMinutes * 1.2 + distanceKm * 18)
+      : Math.round(sets * reps * Math.max(4, weight * 0.6));
 
-    const current = muscleStats.get(label) ?? { sessions: 0, loadScore: 0 };
-    current.sessions += 1;
-    current.loadScore += loadScore;
-    muscleStats.set(label, current);
-
-    const exerciseKey = row.created_at.slice(0, 10);
-    if (exerciseKey && dateSet.has(exerciseKey)) {
-      workoutSessionsByDate.set(exerciseKey, (workoutSessionsByDate.get(exerciseKey) ?? 0) + 1);
+    if (isCardio) {
+      const intensity = normalizeCardioIntensity(row.cardio_intensity);
+      cardioIntensityCounts.set(intensity, (cardioIntensityCounts.get(intensity) ?? 0) + 1);
     }
+
+    if (!normalizedLabel) {
+      continue;
+    }
+
+    const current = muscleStats.get(normalizedLabel) ?? { sessions: 0, loadScore: 0 };
+    current.sessions += 1;
+    current.loadScore += Math.max(1, loadScore);
+    muscleStats.set(normalizedLabel, current);
+
   }
 
   for (const row of workoutRows) {
-    const workoutKey = (row.workout_on ?? row.workout_date ?? "").slice(0, 10);
-    if (workoutKey && dateSet.has(workoutKey)) {
-      workoutSessionsByDate.set(workoutKey, (workoutSessionsByDate.get(workoutKey) ?? 0) + 1);
-      workoutCaloriesByDate.set(
-        workoutKey,
-        (workoutCaloriesByDate.get(workoutKey) ?? 0) + Math.max(0, row.calories_burned ?? 0)
-      );
-    }
-
     if (muscleRows.length > 0) {
       continue;
     }
 
     const label = inferMuscleGroupFromWorkout(row);
+    if (!label) {
+      continue;
+    }
     const duration = Math.max(0, row.duration_minutes ?? row.total_minutes ?? 0);
     const caloriesBurned = Math.max(0, row.calories_burned ?? 0);
     const loadScore = Math.max(1, Math.round(duration * 1.8 + caloriesBurned * 0.4));
@@ -339,28 +370,74 @@ export default async function AnalyticsPage({
     .map(([name, stats]) => ({
       name,
       sessions: stats.sessions,
+      avgSessionsPerWeek: Number(((stats.sessions / selectedRange) * 7).toFixed(1)),
       loadScore: Math.round(stats.loadScore),
     }))
+    .filter((item) => item.sessions > 0)
     .sort((a, b) => b.loadScore - a.loadScore)
-    .slice(0, 8);
+    .slice(0, TRACKED_MUSCLE_GROUPS.length);
+
+  const sessionsByMuscle = new Map<string, number>(
+    TRACKED_MUSCLE_GROUPS.map((name) => [name, muscleStats.get(name)?.sessions ?? 0])
+  );
+
+  const exerciseCountsByMuscle = new Map<string, Map<string, number>>();
+  for (const row of recommendationRows) {
+    const normalized = normalizeMuscleGroup(row.muscle_group ?? "");
+    const exerciseName = String(row.exercise_name ?? "").trim();
+    if (!normalized || !exerciseName) {
+      continue;
+    }
+
+    const counts = exerciseCountsByMuscle.get(normalized) ?? new Map<string, number>();
+    counts.set(exerciseName, (counts.get(exerciseName) ?? 0) + 1);
+    exerciseCountsByMuscle.set(normalized, counts);
+  }
+
+  const getTopExercisesForMuscle = (muscle: string, limit: number) => {
+    const counts = exerciseCountsByMuscle.get(muscle);
+    if (!counts) {
+      return [] as string[];
+    }
+
+    return Array.from(counts.entries())
+      .sort((a, b) => {
+        if (b[1] !== a[1]) {
+          return b[1] - a[1];
+        }
+        return a[0].localeCompare(b[0]);
+      })
+      .slice(0, limit)
+      .map(([name]) => name);
+  };
+
+  const underutilizedMuscleGroups = TRACKED_MUSCLE_GROUPS.map((name) => ({
+    name,
+    sessions: sessionsByMuscle.get(name) ?? 0,
+    avgSessionsPerWeek: Number((((sessionsByMuscle.get(name) ?? 0) / selectedRange) * 7).toFixed(1)),
+    exercises: getTopExercisesForMuscle(name, 3),
+  }))
+    .sort((a, b) => a.avgSessionsPerWeek - b.avgSessionsPerWeek)
+    .slice(0, 3);
+
+  const ignoredMuscleGroups = underutilizedMuscleGroups
+    .filter((item) => item.sessions === 0)
+    .map((item) => item.name);
+
+  const weeklyCardioIntensity = ["Low", "Moderate", "High", "Unknown"].map((name) => {
+    const sessions = cardioIntensityCounts.get(name) ?? 0;
+    return {
+      name,
+      sessions,
+      avgSessionsPerWeek: Number(((sessions / selectedRange) * 7).toFixed(1)),
+    };
+  });
+
+  const maxCardioIntensitySessions = Math.max(...weeklyCardioIntensity.map((item) => item.sessions), 1);
 
   const maxMuscleLoad = Math.max(...muscleSummary.map((item) => item.loadScore), 1);
-  const workoutSeries =
-    selectedWorkoutMetric === "calories"
-      ? dateKeys.map((key) => workoutCaloriesByDate.get(key) ?? null)
-      : dateKeys.map((key) => workoutSessionsByDate.get(key) ?? null);
-  const workoutPolyline = linePoints(workoutSeries, 1000, 200);
-  const workoutEntries = workoutSeries.filter((value): value is number => value !== null);
-  const avgWorkoutMetric =
-    workoutEntries.length > 0
-      ? Number((workoutEntries.reduce((sum, value) => sum + value, 0) / workoutEntries.length).toFixed(1))
-      : 0;
-  const workoutMetricLabel = selectedWorkoutMetric === "calories" ? "Avg workout cals/day" : "Avg workouts/day";
-  const workoutMetricDescription =
-    selectedWorkoutMetric === "calories"
-      ? "Daily workout calories burned in the selected range."
-      : "Daily workout session count in the selected range.";
-  const workoutMetricSuffix = selectedWorkoutMetric === "calories" ? "kcal" : "sessions";
+  const workoutMetricLabel = `Workouts (${selectedRange}d)`;
+  const workoutMetricValue = workoutRows.length;
   const weightEntries = weightSeries.filter((value): value is number => value !== null);
   const calorieEntries = calorieSeries.filter((value): value is number => value !== null);
   const avgCalories =
@@ -390,7 +467,7 @@ export default async function AnalyticsPage({
           {RANGE_OPTIONS.map((range) => (
             <Link
               key={range}
-              href={`/analytics?range=${range}&workoutMetric=${selectedWorkoutMetric}`}
+              href={`/analytics?range=${range}`}
               className={`rounded-lg px-3 py-1.5 text-sm font-medium transition ${
                 selectedRange === range ? "bg-zinc-900 text-white" : "text-zinc-700 hover:bg-zinc-100"
               }`}
@@ -419,9 +496,7 @@ export default async function AnalyticsPage({
         </div>
         <div className="rounded-2xl border border-zinc-200 bg-white p-5 shadow-sm">
           <p className="text-xs font-medium uppercase tracking-wide text-zinc-500">{workoutMetricLabel}</p>
-          <p className="mt-2 text-3xl font-semibold text-zinc-950">
-            {selectedWorkoutMetric === "calories" ? avgWorkoutMetric.toLocaleString() : avgWorkoutMetric}
-          </p>
+          <p className="mt-2 text-3xl font-semibold text-zinc-950">{workoutMetricValue.toLocaleString()}</p>
         </div>
         <div className="rounded-2xl border border-zinc-200 bg-white p-5 shadow-sm">
           <p className="text-xs font-medium uppercase tracking-wide text-zinc-500">Maintenance est/day</p>
@@ -494,51 +569,36 @@ export default async function AnalyticsPage({
         </section>
 
         <section className="rounded-2xl border border-zinc-200 bg-white p-5 shadow-sm">
-          <div className="flex items-center justify-between gap-3">
-            <h2 className="text-lg font-semibold text-zinc-950">Workout trend ({selectedRange} days)</h2>
-            <div className="inline-flex rounded-lg border border-zinc-200 bg-white p-1 text-xs">
-              {WORKOUT_METRIC_OPTIONS.map((metric) => (
-                <Link
-                  key={metric}
-                  href={`/analytics?range=${selectedRange}&workoutMetric=${metric}`}
-                  className={`rounded-md px-2 py-1 font-medium capitalize transition ${
-                    selectedWorkoutMetric === metric ? "bg-zinc-900 text-white" : "text-zinc-700 hover:bg-zinc-100"
-                  }`}
-                >
-                  {metric}
-                </Link>
-              ))}
-            </div>
-          </div>
-          <p className="mt-1 text-sm text-zinc-600">{workoutMetricDescription}</p>
-          <div className="mt-4 h-56 rounded-xl border border-zinc-100 bg-zinc-50 p-3">
-            {workoutPolyline ? (
-              <svg viewBox="0 0 1000 200" className="h-full w-full">
-                <polyline
-                  fill="none"
-                  stroke="#dc2626"
-                  strokeWidth="4"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  points={workoutPolyline}
-                />
-              </svg>
-            ) : (
-              <div className="flex h-full items-center justify-center text-sm text-zinc-500">
-                Not enough workout data for this range.
+          <h2 className="text-lg font-semibold text-zinc-950">Under-utilized muscles ({selectedRange} days)</h2>
+          <p className="mt-1 text-sm text-zinc-600">
+            Muscles with the lowest weekly frequency, plus ignored muscle parts in this range.
+          </p>
+          <div className="mt-4 rounded-xl border border-zinc-100 bg-zinc-50 p-4">
+            {underutilizedMuscleGroups.length > 0 ? (
+              <div className="space-y-3">
+                {underutilizedMuscleGroups.map((item) => (
+                  <div key={item.name} className="rounded-lg border border-zinc-200 bg-white p-4">
+                    <p className="text-sm font-semibold text-zinc-900">{item.name}</p>
+                    <p className="mt-1 text-xs text-zinc-600">
+                      Avg {item.avgSessionsPerWeek} sessions/week ({item.sessions} total sessions)
+                    </p>
+                    <p className="mt-2 text-sm text-zinc-700">
+                      Suggested exercises: {item.exercises.length > 0 ? item.exercises.join(", ") : "No saved exercises for this muscle yet. Log exercises in Workouts to build recommendations."}
+                    </p>
+                  </div>
+                ))}
+                <div className="rounded-lg border border-amber-200 bg-amber-50 p-3 text-sm text-amber-900">
+                  Ignored muscle parts: {ignoredMuscleGroups.length > 0 ? ignoredMuscleGroups.join(", ") : "None. Every tracked muscle got at least one session."}
+                </div>
               </div>
+            ) : (
+              <p className="text-sm text-zinc-600">No workout logs available yet to calculate under-utilized muscles.</p>
             )}
-          </div>
-          <div className="mt-2 flex justify-between text-xs text-zinc-500">
-            <span>{formatShortDayLabel(dateKeys[0])}</span>
-            <span>
-              {formatShortDayLabel(dateKeys[dateKeys.length - 1])} • {workoutMetricSuffix}
-            </span>
           </div>
         </section>
       </div>
 
-      <div className="grid gap-6 xl:grid-cols-2">
+      <div className="grid gap-6 xl:grid-cols-3">
         <section className="rounded-2xl border border-zinc-200 bg-white p-5 shadow-sm">
           <h2 className="text-lg font-semibold text-zinc-950">Overall macro coverage</h2>
           <p className="mt-1 text-sm text-zinc-600">
@@ -568,7 +628,7 @@ export default async function AnalyticsPage({
         <section className="rounded-2xl border border-zinc-200 bg-white p-5 shadow-sm">
           <h2 className="text-lg font-semibold text-zinc-950">Muscle group workload</h2>
           <p className="mt-1 text-sm text-zinc-600">
-            Top muscle groups worked in the last {selectedRange} days using session load score.
+            Load score and weekly frequency for each trained muscle group.
           </p>
           {muscleSummary.length > 0 ? (
             <div className="mt-5 space-y-3">
@@ -579,7 +639,7 @@ export default async function AnalyticsPage({
                     <div className="mb-1 flex items-center justify-between text-sm">
                       <p className="font-medium text-zinc-800">{item.name}</p>
                       <p className="text-zinc-600">
-                        {item.sessions} sessions • score {item.loadScore}
+                        {item.sessions} sessions • {item.avgSessionsPerWeek}/week • score {item.loadScore}
                       </p>
                     </div>
                     <div className="h-2 rounded-full bg-zinc-100">
@@ -592,6 +652,40 @@ export default async function AnalyticsPage({
           ) : (
             <p className="mt-4 text-sm text-zinc-600">No workout logs for this range yet.</p>
           )}
+        </section>
+
+        <section className="rounded-2xl border border-zinc-200 bg-white p-5 shadow-sm">
+          <h2 className="text-lg font-semibold text-zinc-950">Weekly cardio intensity</h2>
+          <p className="mt-1 text-sm text-zinc-600">
+            Average cardio sessions per week by intensity (Low, Moderate, High).
+          </p>
+          <div className="mt-5 space-y-3">
+            {weeklyCardioIntensity.map((item) => {
+              const width = Math.max(6, Math.round((item.sessions / maxCardioIntensitySessions) * 100));
+              const tone =
+                item.name === "High"
+                  ? "bg-red-500"
+                  : item.name === "Moderate"
+                    ? "bg-amber-500"
+                    : item.name === "Low"
+                      ? "bg-blue-500"
+                      : "bg-zinc-400";
+
+              return (
+                <div key={item.name}>
+                  <div className="mb-1 flex items-center justify-between text-sm">
+                    <p className="font-medium text-zinc-800">{item.name}</p>
+                    <p className="text-zinc-600">
+                      {item.sessions} sessions • {item.avgSessionsPerWeek}/week
+                    </p>
+                  </div>
+                  <div className="h-2 rounded-full bg-zinc-100">
+                    <div className={`h-full rounded-full ${tone}`} style={{ width: `${width}%` }} />
+                  </div>
+                </div>
+              );
+            })}
+          </div>
         </section>
       </div>
     </div>
