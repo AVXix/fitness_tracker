@@ -167,7 +167,7 @@ export function ExerciseForm() {
                   : "bg-gray-200 text-gray-700 hover:bg-gray-300"
               }`}
             >
-              💪 Weight Train
+              Weight Train
             </button>
             <button
               type="button"
@@ -181,7 +181,7 @@ export function ExerciseForm() {
                   : "bg-gray-200 text-gray-700 hover:bg-gray-300"
               }`}
             >
-              🏃 Cardio
+              Cardio
             </button>
           </div>
         </div>

@@ -66,7 +66,7 @@ async function loadGoals(userId: string): Promise<Goal[]> {
       .order("created_at", { ascending: false });
 
     if (!result.error) {
-      return (result.data ?? []).map((row) => normalizeGoalRow(row as Record<string, unknown>));
+      return (result.data ?? []).map((row) => normalizeGoalRow(row as unknown as Record<string, unknown>));
     }
   }
 

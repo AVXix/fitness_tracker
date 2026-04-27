@@ -71,7 +71,7 @@ export function ExerciseHistory({ workouts }: { workouts: WorkoutWithExercises[]
                                   : "bg-blue-100 text-blue-700"
                               }`}
                             >
-                              {exercise.exercise_type === "cardio" ? "🏃 Cardio" : "💪 Weight"}
+                              {exercise.exercise_type === "cardio" ? "Cardio" : "Weight"}
                             </span>
                             {exercise.category && (
                               <span className="text-xs text-zinc-600 bg-gray-100 px-2 py-1 rounded">
@@ -80,7 +80,7 @@ export function ExerciseHistory({ workouts }: { workouts: WorkoutWithExercises[]
                             )}
                             {exercise.muscle_group && (
                               <span className="text-xs text-purple-700 bg-purple-100 px-2 py-1 rounded">
-                                🦵 {exercise.muscle_group}
+                                {exercise.muscle_group}
                               </span>
                             )}
                             {exercise.cardio_intensity && (
