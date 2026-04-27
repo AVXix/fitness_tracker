@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, type FormEvent } from "react";
-import { addExerciseLogAction } from "@/app/fitness-actions";
+import { addExerciseLogAction } from "@/app/actions/exercise-actions";
 
 const WEIGHT_TRAIN_CATEGORIES = ["Upper Body", "Core", "Lower Body", "Full Body"];
 const MUSCLE_GROUPS = {

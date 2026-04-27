@@ -1,10 +1,7 @@
 # Fitness Tracker Requirements
 
-## Core Product Scope
+ User roles and authentication
 
-This fitness tracker platform should support the following major features:
-
-- User roles and authentication
 - User profile management
 - Workout logging, including recording exercises
 - Calorie tracker
@@ -15,4 +12,3 @@ This fitness tracker platform should support the following major features:
 - Fitness-related query forum
 - Trainer request flow
 - Progress tracking dashboard
-

@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { PendingSubmitButton } from "@/components/PendingSubmitButton";
-import { deleteForumPostAction, voteForumPostAction } from "@/app/fitness-actions";
+import { deleteForumPostAction, voteForumPostAction } from "@/app/actions/forum-actions";
 
 interface ForumPost {
   id: string;

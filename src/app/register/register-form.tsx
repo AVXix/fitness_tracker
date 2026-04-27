@@ -47,7 +47,7 @@ export function RegisterForm() {
       }
 
       if (data.session) {
-        router.push("/profile");
+        router.push("/dashboard");
         router.refresh();
         return;
       }

@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { createForumPostAction } from "@/app/fitness-actions";
+import { createForumPostAction } from "@/app/actions/forum-actions";
 import { PendingSubmitButton } from "@/components/PendingSubmitButton";
 
 interface CreatePostFormProps {

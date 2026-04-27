@@ -6,14 +6,14 @@ import { logoutAction } from "@/app/auth-actions";
 
 const navItems = [
   { label: "Dashboard", href: "/dashboard" },
-  { label: "Profile", href: "/profile" },
   { label: "Workouts", href: "/workouts" },
   { label: "Weight & Calorie Tracker", href: "/weight-tracker" },
   { label: "Goals", href: "/goals" },
-  { label: "Store", href: "/store" },
-  { label: "Hire Trainers", href: "/trainers" },
   { label: "Analytics", href: "/analytics" },
+  { label: "Hire Trainers", href: "/trainers" },
   { label: "Community Forum", href: "/forum" },
+  { label: "Store", href: "/store" },
+  { label: "Profile", href: "/profile" },
 ];
 
 export function Sidebar() {

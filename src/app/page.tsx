@@ -36,7 +36,7 @@ export default async function Home() {
             <div className="mt-8 flex flex-wrap gap-3">
               {user ? (
                 <>
-                  <Link href="/profile" className="rounded-xl bg-zinc-950 px-5 py-3 text-white">
+                  <Link href="/dashboard" className="rounded-xl bg-zinc-950 px-5 py-3 text-white">
                     Open My Dashboard
                   </Link>
                   <form action={logoutAction}>

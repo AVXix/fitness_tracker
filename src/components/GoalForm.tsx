@@ -2,7 +2,7 @@
 
 import { useState, useRef } from "react";
 import { useRouter } from "next/navigation";
-import { addGoalAction } from "@/app/fitness-actions";
+import { addGoalAction } from "@/app/actions/goal-actions";
 
 interface GoalFormProps {
   onGoalAdded?: () => void;

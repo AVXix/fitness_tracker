@@ -1,6 +1,6 @@
 import { WeightTracker } from "@/components/WeightTracker";
 import { CalorieTracker } from "@/components/CalorieTracker";
-import { addWeightLogAction, addCalorieLogAction } from "@/app/fitness-actions";
+import { addWeightLogAction, addCalorieLogAction } from "@/app/actions/profile-actions";
 import { getFitnessDashboardData } from "@/lib/fitness";
 import { getCurrentUser } from "@/lib/supabase/server";
 

@@ -164,3 +164,51 @@ export async function rateTrainerAction(formData: FormData) {
   revalidatePath("/trainers");
   redirect("/trainers?ratingSuccess=Rating+saved.");
 }
+
+export async function removeHireRequestAction(formData: FormData) {
+  const user = await requireUser();
+  const supabase = await createSupabaseServerClient();
+
+  if (!supabase) {
+    return;
+  }
+
+  const requestId = String(formData.get("requestId") ?? "").trim();
+
+  if (!requestId) {
+    redirect("/trainers?trainerError=Invalid+request.");
+  }
+
+  const { data: requestRow, error: lookupError } = await supabase
+    .from("trainer_hire_requests")
+    .select("id, client_user_id, trainer_user_id")
+    .eq("id", requestId)
+    .maybeSingle<{
+      id: string;
+      client_user_id: string;
+      trainer_user_id: string;
+    }>();
+
+  if (lookupError || !requestRow) {
+    const safeMessage = (lookupError?.message || "Hire request not found.").slice(0, 220);
+    redirect(`/trainers?trainerError=${encodeURIComponent(safeMessage)}`);
+  }
+
+  const canRemove = user.id === requestRow.client_user_id || user.id === requestRow.trainer_user_id;
+  if (!canRemove) {
+    redirect("/trainers?trainerError=You+cannot+remove+this+request.");
+  }
+
+  const { error: deleteError } = await supabase
+    .from("trainer_hire_requests")
+    .delete()
+    .eq("id", requestId);
+
+  if (deleteError) {
+    const safeMessage = (deleteError.message || "Failed to remove request.").slice(0, 220);
+    redirect(`/trainers?trainerError=${encodeURIComponent(safeMessage)}`);
+  }
+
+  revalidatePath("/trainers");
+  redirect("/trainers?trainerSuccess=Request+removed.");
+}

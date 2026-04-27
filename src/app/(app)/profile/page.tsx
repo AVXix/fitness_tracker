@@ -1,4 +1,4 @@
-import { saveProfileAction } from "@/app/fitness-actions";
+import { saveProfileAction } from "@/app/actions/profile-actions";
 import { TrainerProfileFields } from "@/components/TrainerProfileFields";
 import { getFitnessDashboardData } from "@/lib/fitness";
 import { getCurrentUser } from "@/lib/supabase/server";

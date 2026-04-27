@@ -128,6 +128,7 @@ select to_regclass('public.trainer_ratings') as trainer_ratings_table;
 
 ## Related docs
 
+- FILE_STRUCTURE.md
 - SUPABASE_SETUP.md
 - FORUM_SETUP.md
 - FORUM_VOTES_FIX.md
