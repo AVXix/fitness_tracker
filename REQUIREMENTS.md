@@ -7,7 +7,7 @@
 - Calorie tracker
 - Weight tracker
 - Analytics, including graphs, records, and recommendations
-- Goal setting with notifications and reminders
+- Goal setting
 - Supplement and equipment store
 - Fitness-related query forum
 - Trainer request flow
