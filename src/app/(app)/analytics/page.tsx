@@ -35,12 +35,22 @@ const TRACKED_MUSCLE_GROUPS = ["Chest", "Back", "Legs", "Shoulders", "Arms", "Co
 
 function normalizeMuscleGroup(label: string) {
   const text = label.toLowerCase();
-  if (text.includes("chest")) return "Chest";
-  if (text.includes("back")) return "Back";
-  if (text.includes("leg")) return "Legs";
-  if (text.includes("shoulder")) return "Shoulders";
-  if (text.includes("arm") || text.includes("bicep") || text.includes("tricep")) return "Arms";
-  if (text.includes("core") || text.includes("abs")) return "Core";
+  if (text.includes("chest") || text.includes("pec")) return "Chest";
+  if (
+    text.includes("back") ||
+    text.includes("lat") ||
+    text.includes("rhomboid") ||
+    text.includes("trap") ||
+    text.includes("rear delt") ||
+    text.includes("front delt") ||
+    text.includes("side delt") ||
+    text.includes("upper back") ||
+    text.includes("lower back")
+  ) return "Back";
+  if (text.includes("leg") || text.includes("quad") || text.includes("hamstring") || text.includes("calf") || text.includes("adductor") || text.includes("abductor")) return "Legs";
+  if (text.includes("shoulder") || text.includes("deltoid") || text.includes("delt")) return "Shoulders";
+  if (text.includes("arm") || text.includes("bicep") || text.includes("tricep") || text.includes("forearm")) return "Arms";
+  if (text.includes("core") || text.includes("abs") || text.includes("oblique") || text.includes("transverse")) return "Core";
   if (text.includes("glute") || text.includes("hip")) return "Glutes";
   return null;
 }
@@ -55,16 +65,16 @@ function normalizeCardioIntensity(label: string | null | undefined) {
 
 function inferMuscleGroupFromWorkout(row: WorkoutAnalyticsRow) {
   const text = `${row.name ?? ""} ${row.category ?? ""} ${row.workout_type ?? ""}`.toLowerCase();
-  if (/(chest|push|bench)/.test(text)) return "Chest";
-  if (/(back|pull|row|deadlift)/.test(text)) return "Back";
-  if (/(leg|quad|hamstring|squat|lunge)/.test(text)) return "Legs";
-  if (/(shoulder|deltoid|overhead)/.test(text)) return "Shoulders";
-  if (/(arm|bicep|tricep|curl)/.test(text)) return "Arms";
+  if (/(chest|push|bench|pec)/.test(text)) return "Chest";
+  if (/(back|pull|row|deadlift|lat|rhomboid|trap|rear delt|upper back|lower back)/.test(text)) return "Back";
+  if (/(leg|quad|hamstring|squat|lunge|calf|adductor|abductor)/.test(text)) return "Legs";
+  if (/(shoulder|deltoid|delt|front delt|side delt|overhead)/.test(text)) return "Shoulders";
+  if (/(arm|bicep|tricep|curl|forearm)/.test(text)) return "Arms";
   if (/(glute|hip)/.test(text)) return "Glutes";
-  if (/(core|abs|plank)/.test(text)) return "Core";
+  if (/(core|abs|oblique|transverse|plank)/.test(text)) return "Core";
   if (/(lower body)/.test(text)) return "Legs";
   if (/(upper body)/.test(text)) return "Back";
-  if (/(full body)/.test(text)) return "Core";
+  if (/(full body)/.test(text)) return "Full Body";
   return null;
 }
 
